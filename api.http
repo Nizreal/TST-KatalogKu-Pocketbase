@@ -1,0 +1,57 @@
+### KatalogKu Stage B API checks (VS Code REST Client)
+### Select the local environment, then run in order. The first registration is one-time.
+
+@baseUrl = http://localhost:18081/api
+@productId = {{list.response.body.$.items[0].id}}
+@token = {{login.response.body.$.token}}
+@userId = {{login.response.body.$.record.id}}
+
+### 1. Gateway health
+GET {{baseUrl}}/health
+
+### 2. Public product list
+# @name list
+GET {{baseUrl}}/products?perPage=5&sort=-created
+
+### 3. Public product details
+GET {{baseUrl}}/products/{{productId}}
+
+### 4. Register user (change email if it already exists)
+POST {{baseUrl}}/auth/records
+Content-Type: application/json
+
+{
+  "name": "Frieren",
+  "email": "frieren@katalogku.local",
+  "password": "frierenlovehimmel",
+  "passwordConfirm": "frierenlovehimmel"
+}
+
+### 5. Login
+# @name login
+POST {{baseUrl}}/auth/auth-with-password
+Content-Type: application/json
+
+{
+  "identity": "frieren@katalogku.local",
+  "password": "frierenlovehimmel"
+}
+
+### 6. Add favorite (use a different product_id for each successful request)
+POST {{baseUrl}}/favorites
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "user": "{{userId}}",
+  "product_id": "{{productId}}"
+}
+
+### 7. List only my favorites
+# @name favs
+GET {{baseUrl}}/favorites
+Authorization: {{token}}
+
+### 8. Delete my first favorite
+DELETE {{baseUrl}}/favorites/{{favs.response.body.$.items[0].id}}
+Authorization: {{token}}
